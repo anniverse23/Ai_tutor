@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Tutor</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f4f4f9; }
+    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; background: white; }
+    .msg { margin: 8px 0; padding: 6px; border-radius: 6px; }
+    .user { background: #d1e7dd; text-align: right; }
+    .ai { background: #e2e3e5; text-align: left; }
+    input { width: 70%; padding: 8px; }
+    button { padding: 8px 12px; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h2>AI Tutor 📘</h2>
+  <div id="chat"></div>
+  <input id="question" placeholder="Ask me anything...">
+  <button onclick="askAI()">Ask</button>
+  <p id="counter"></p>
+  <button onclick="watchAd()">🎥 Watch Ad</button>
+  <button onclick="upgrade()">🌟 Go Premium</button>
+
+  <script>
+    let questionCount = 0;
+    let dailyLimit = 8;
+
+    function updateCounter(){
+      document.getElementById("counter").innerText =
+        `Questions used: ${questionCount} / ${dailyLimit}`;
+    }
+
+    async function askAI() {
+      if(questionCount >= dailyLimit){
+        alert("Limit reached! Watch an ad or upgrade.");
+        return;
+      }
+
+      const input = document.getElementById("question");
+      const chat = document.getElementById("chat");
+
+      const userMsg = document.createElement("div");
+      userMsg.className = "msg user";
+      userMsg.textContent = input.value;
+      chat.appendChild(userMsg);
+
+      try {
+        let response = await fetch("/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: input.value })
+        });
+
+        let data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        const aiMsg = document.createElement("div");
+        aiMsg.className = "msg ai";
+        aiMsg.textContent = data.answer;
+        chat.appendChild(aiMsg);
+        chat.scrollTop = chat.scrollHeight;
+
+        questionCount++;
+        updateCounter();
+        input.value = "";
+      } catch (err) {
+        alert("Error: " + err.message);
+        console.error(err);
+      }
+    }
+
+    function watchAd(){
+      alert("Pretend ad watched ✅ +3 more questions unlocked!");
+      dailyLimit += 3;
+      updateCounter();
+    }
+
+    function upgrade(){
+      alert("Redirecting to Premium...");
+      // Later: replace with Stripe checkout link
+    }
+
+    window.onload = updateCounter;
+  </script>
+</body>
+</html>
